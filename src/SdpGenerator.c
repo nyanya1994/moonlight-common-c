@@ -317,7 +317,15 @@ static PSDP_OPTION getAttributesList(char*urlSafeAddr) {
         } else {
             err |= addAttributeString(&optionHead, "x-ss-video[0].intraRefresh", "0");
         }
-    }
+
+        // Tell Vibepollo 2.0.1+ our wired link speed so it paces PyroWave frames to
+        // the slowest link on the path. Without this, a 10 GbE host NIC makes the
+        // pacer pace at ~8 Gbps and each frame is blasted as one giant burst that
+        // overflows the client's gigabit path (tail loss -> wavelet blur).
+        // Older hosts ignore unknown attributes, so this is safe to always send.
+        snprintf(payloadStr, sizeof(payloadStr), "%d", 1000); // Xbox wired NIC, Mbps
+        err |= addAttributeString(&optionHead, "x-ss-video[0].pyrowaveLinkMbps", payloadStr);
+        }
 
     snprintf(payloadStr, sizeof(payloadStr), "%d", StreamConfig.width);
     err |= addAttributeString(&optionHead, "x-nv-video[0].clientViewportWd", payloadStr);
